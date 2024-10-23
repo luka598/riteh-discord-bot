@@ -1,9 +1,12 @@
 import requests
 from bs4 import BeautifulSoup, Tag
 import typing as T
+import cachetools.func
 
 
+@cachetools.func.ttl_cache(ttl=30)
 def get_meni(menza_id: int):
+    print("get_meni")
     r = requests.get(f"https://app.scri.hr/dnevnimeni/{menza_id}")
     soup = BeautifulSoup(r.text, "html.parser")
 

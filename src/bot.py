@@ -5,6 +5,7 @@ from menza import get_meni
 from itertools import count
 from datetime import datetime
 import os
+import time
 
 conn = sqlite3.connect("menza.db")
 cur = conn.cursor()
@@ -59,16 +60,20 @@ def gen_menza(menza_id: int) -> discord.Embed:
 
 
 async def refresh_menza():
+    print("Refresh", time.time())
     cur.execute("SELECT channel, message_id, menza_id FROM menza_subscriber")
 
     subs = cur.fetchall()
 
     for sub in subs:
-        channel = bot.get_channel(sub[0])
-        if channel is None:
-            continue
-        message = await channel.fetch_message(sub[1])  # type: ignore
-        await message.edit(embed=gen_menza(sub[2]))
+        try:
+            channel = bot.get_channel(sub[0])
+            if channel is None:
+                continue
+            message = await channel.fetch_message(sub[1])  # type: ignore
+            await message.edit(embed=gen_menza(sub[2]))
+        except Exception:
+            pass  # TODO: Ne ovo radit
 
 
 @bot.command()
@@ -82,13 +87,17 @@ async def sub_menza(ctx, menza_id: int):
         "SELECT COUNT(*) FROM menza_subscriber WHERE channel = ? AND menza_id = ?",
         (ctx.channel.id, menza_id),
     )
-    if cur.fetchone()[0] > 0:
+    res = cur.fetchone()
+    if res[0] > 0:
+        print("Not ok!", res)
         await ctx.send(
             embed=discord.Embed(
                 title="Greška!",
                 description=f"Postoji pretplata na meni za menzu {menza_id}",
             )
         )
+        return
+    print("OK!", res)
 
     message = await ctx.send(embed=gen_menza(menza_id))
 
@@ -131,6 +140,7 @@ async def dbg_refresh_menza(ctx):
 
 @tasks.loop(hours=1)
 async def refresh_menza_loop():
+    print("Refresh loop", time.time())
     await refresh_menza()
 
 

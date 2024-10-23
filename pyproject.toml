@@ -10,7 +10,7 @@ python = "^3.8"
 requests = "^2.32.3"
 "discord.py" = "^2.4.0"
 beautifulsoup4 = "^4.12.3"
-
+cachetools = "^5.5.0"
 
 [build-system]
 requires = ["poetry-core"]
