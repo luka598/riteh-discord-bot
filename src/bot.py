@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import sqlite3
 from menza import get_meni
 from itertools import count
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import os
 import time
 
@@ -35,9 +35,10 @@ async def on_ready():
 
 def gen_menza(menza_id: int) -> discord.Embed:
     tab1, tab2 = get_meni(menza_id)
+    datetime_gmt_2 = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=2)))
     embed = discord.Embed(
         title="Menza",
-        description=f"ID: *`{menza_id}`* | Ažurirano: `{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`",
+        description=f"ID: *`{menza_id}`* | Ažurirano: `{datetime_gmt_2.strftime('%Y-%m-%d %H:%M:%S')}`",
     )
     if tab1 is not None:
         embed.add_field(name="Tablica 1", value="", inline=False)
