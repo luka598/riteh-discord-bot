@@ -1,14 +1,8 @@
 import discord
-from discord.ext import commands, tasks
-import sqlite3
-from menza import get_meni
-from itertools import count
-from datetime import datetime, timezone, timedelta
+from discord.ext import commands
 import os
-import time
 
-conn = sqlite3.connect("menza.db")
-cur = conn.cursor()
+from cogs.menza import Menza
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,133 +10,15 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
-def init_db():
-    cur.execute(
-        """\
-        CREATE TABLE IF NOT EXISTS menza_subscriber
-        (id INTEGER PRIMARY KEY, channel INTEGER, message_id INTEGER, menza_id INTEGER)
-        """
-    )
-    conn.commit()
-
-
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-    init_db()
-    refresh_menza_loop.start()
+    menza_cog = Menza(bot)
+    await bot.add_cog(menza_cog)
+    menza_cog.start()
 
-
-def gen_menza(menza_id: int) -> discord.Embed:
-    tab1, tab2 = get_meni(menza_id)
-    datetime_gmt_2 = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=2)))
-    embed = discord.Embed(
-        title="Menza",
-        description=f"ID: *`{menza_id}`* | Ažurirano: `{datetime_gmt_2.strftime('%Y-%m-%d %H:%M:%S')}`",
-    )
-    if tab1 is not None:
-        embed.add_field(name="Tablica 1", value="", inline=False)
-        for item, i in zip(tab1, count()):
-            embed.add_field(
-                name=item[0],
-                value="\n".join(item[1]),
-                inline=True,
-            )
-
-    if tab2 is not None:
-        embed.add_field(name="Tablica 2", value="", inline=False)
-        for item, i in zip(tab2, count()):
-            embed.add_field(
-                name=item[0],
-                value="\n".join(item[1]),
-                inline=True,
-            )
-    return embed
-
-
-async def refresh_menza():
-    print("Refresh", time.time())
-    cur.execute("SELECT channel, message_id, menza_id FROM menza_subscriber")
-
-    subs = cur.fetchall()
-
-    for sub in subs:
-        try:
-            channel = bot.get_channel(sub[0])
-            if channel is None:
-                continue
-            message = await channel.fetch_message(sub[1])  # type: ignore
-            await message.edit(embed=gen_menza(sub[2]))
-        except Exception:
-            pass  # TODO: Ne ovo radit
-
-
-@bot.command()
-async def menza(ctx, menza_id: int):
-    await ctx.send(embed=gen_menza(menza_id))
-
-
-@bot.command()
-async def sub_menza(ctx, menza_id: int):
-    cur.execute(
-        "SELECT COUNT(*) FROM menza_subscriber WHERE channel = ? AND menza_id = ?",
-        (ctx.channel.id, menza_id),
-    )
-    res = cur.fetchone()
-    if res[0] > 0:
-        print("Not ok!", res)
-        await ctx.send(
-            embed=discord.Embed(
-                title="Greška!",
-                description=f"Postoji pretplata na meni za menzu {menza_id}",
-            )
-        )
-        return
-    print("OK!", res)
-
-    message = await ctx.send(embed=gen_menza(menza_id))
-
-    cur.execute(
-        "INSERT INTO menza_subscriber (channel, message_id, menza_id) VALUES (?, ?, ?)",
-        (ctx.channel.id, message.id, menza_id),
-    )
-    conn.commit()
-
-    await ctx.send(
-        embed=discord.Embed(
-            title="Uspjeh!",
-            description=f"Pretplačeni na meni menze {menza_id}",
-        )
-    )
-
-
-@bot.command()
-async def unsub_menza(ctx, menza_id: int):
-    cur.execute(
-        "DELETE FROM menza_subscriber WHERE channel = ? AND menza_id = ?",
-        (ctx.channel.id, menza_id),
-    )
-    conn.commit()
-
-    await ctx.send(
-        embed=discord.Embed(
-            title="Uspjeh!",
-            description=f"Odjavljeni sa pretplane na meni menze {menza_id}",
-        )
-    )
-
-
-@bot.command()
-async def dbg_refresh_menza(ctx):
-    if ctx.author.id != 213246013958258688:
-        return
-    await refresh_menza()
-
-
-@tasks.loop(hours=1)
-async def refresh_menza_loop():
-    print("Refresh loop", time.time())
-    await refresh_menza()
+    await bot.tree.sync()
+    await bot.change_presence(activity=discord.Game(name="!menza riteh"))
 
 
 bot.run(os.getenv("DISCORD_BOT_TOKEN", ""))
