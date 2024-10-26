@@ -1,4 +1,3 @@
-import sqlite3
 import discord
 from discord.ext import commands, tasks
 from scri import get_meni
@@ -12,25 +11,51 @@ ONEOFF_COLOR = 0x15D6EA
 REPEATING_COLOR = 0x9415EA
 
 
-class Menza(commands.Cog):
-    def __init__(self, bot) -> None:
-        self.bot = bot
+class MenzaDatabase:
+    def __init__(self, db) -> None:
+        self.db = db
 
-        self.conn = sqlite3.connect("menza.db")
-        self.cur = self.conn.cursor()
-
-    def start(self):
-        self.init_db()
-        self.refresh_menza_loop.start()
-
-    def init_db(self):
-        self.cur.execute(
+        self.db.cur.execute(
             """\
             CREATE TABLE IF NOT EXISTS menza_subscriber
             (id INTEGER PRIMARY KEY, channel INTEGER, message INTEGER, menza TEXT)
             """
         )
-        self.conn.commit()
+        self.db.conn.commit()
+
+    def get_subs(self):
+        self.db.cur.execute("SELECT channel, message, menza FROM menza_subscriber")
+        return self.db.cur.fetchall()
+
+    def count_subs(self, channel_id: int, menza_name: str):
+        self.db.cur.execute(
+            "SELECT COUNT(*) FROM menza_subscriber WHERE channel = ? AND menza = ?",
+            (channel_id, menza_name),
+        )
+        return self.db.cur.fetchone()[0]
+
+    def add_sub(self, channel_id, message_id, menza_name):
+        self.db.cur.execute(
+            "INSERT INTO menza_subscriber (channel, message, menza) VALUES (?, ?, ?)",
+            (channel_id, message_id, menza_name),
+        )
+        self.db.conn.commit()
+
+    def del_sub(self, channel_id, menza_name):
+        self.db.cur.execute(
+            "DELETE FROM menza_subscriber WHERE channel = ? AND menza = ?",
+            (channel_id, menza_name),
+        )
+        self.db.conn.commit()
+
+
+class Menza(commands.Cog):
+    def __init__(self, bot, db: MenzaDatabase) -> None:
+        self.bot = bot
+        self.db = db
+
+    def start(self):
+        self.refresh_menza_loop.start()
 
     @staticmethod
     def _gen_menza(menza_name: str, one_off: bool) -> discord.Embed:
@@ -65,19 +90,16 @@ class Menza(commands.Cog):
 
     async def _refresh_menza(self):
         print("Refresh", time.time())
-        self.cur.execute("SELECT channel, message, menza FROM menza_subscriber")
 
-        subs = self.cur.fetchall()
-
-        for sub in subs:
+        for sub in self.db.get_subs():
             try:
                 channel = self.bot.get_channel(sub[0])
                 if channel is None:
                     continue
                 message = await channel.fetch_message(sub[1])  # type: ignore
                 await message.edit(embed=self._gen_menza(sub[2], False))
-            except Exception:
-                pass  # TODO: Ne ovo radit
+            except Exception as e:
+                print("???", e.__class__.__name__, str(e))  # TODO: Ne ovo radit
 
     @commands.command()
     async def menza(self, ctx, menza_name: str):
@@ -85,13 +107,7 @@ class Menza(commands.Cog):
 
     @commands.command()
     async def menza_sub(self, ctx, menza_name: str):
-        self.cur.execute(
-            "SELECT COUNT(*) FROM menza_subscriber WHERE channel = ? AND menza = ?",
-            (ctx.channel.id, menza_name),
-        )
-        res = self.cur.fetchone()
-        if res[0] > 0:
-            print("Not ok!", res)
+        if self.db.count_subs(ctx.channel.id, menza_name):
             await ctx.send(
                 embed=discord.Embed(
                     title="Greška!",
@@ -100,15 +116,10 @@ class Menza(commands.Cog):
                 )
             )
             return
-        print("OK!", res)
 
         message = await ctx.send(embed=self._gen_menza(menza_name, False))
 
-        self.cur.execute(
-            "INSERT INTO menza_subscriber (channel, message, menza) VALUES (?, ?, ?)",
-            (ctx.channel.id, message.id, menza_name),
-        )
-        self.conn.commit()
+        self.db.add_sub(ctx.channel.id, message.id, menza_name)
 
         await ctx.send(
             embed=discord.Embed(
@@ -120,11 +131,7 @@ class Menza(commands.Cog):
 
     @commands.command()
     async def menza_unsub(self, ctx, menza_name: str):
-        self.cur.execute(
-            "DELETE FROM menza_subscriber WHERE channel = ? AND menza = ?",
-            (ctx.channel.id, menza_name),
-        )
-        self.conn.commit()
+        self.db.del_sub(ctx.channel.id, menza_name)
 
         await ctx.send(
             embed=discord.Embed(
