@@ -17,7 +17,7 @@ class RitehNovost:
     def hash(self):
         m = sha256()
         m.update(self.link.encode())
-        m.update(self.date.encode())
+        m.update(self.title.encode())
         return m.hexdigest()
 
 
