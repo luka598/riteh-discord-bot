@@ -87,6 +87,8 @@ class Novosti(commands.Cog):
             description=f"Objavljeno: {novost.date}",
             color=ONEOFF_COLOR if one_off else REPEATING_COLOR,
         )
+        if novost.img is not None:
+            embed.set_image(url=novost.img)
         embed.add_field(name="", value=novost.summary)
         return embed
 

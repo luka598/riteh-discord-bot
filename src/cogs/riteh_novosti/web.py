@@ -12,6 +12,7 @@ class RitehNovost:
     link: str
     summary: str
     date: str
+    img: T.Optional[str]
 
     @property
     def hash(self):
@@ -30,12 +31,25 @@ def get_novosti() -> T.List[RitehNovost]:
 
     novosti = []
     for novost in novosti_ul:
+        title = novost.h3.text.replace("\xa0", " ")
+        try:
+            link = "http://www.riteh.uniri.hr" + novost.a["href"]
+        except:
+            link = ""
+        summary = novost.div.text.replace("\xa0", " ")
+        date = novost.dl.dd.text.replace("\xa0", " ")
+        try:
+            img = "http://www.riteh.uniri.hr" + novost.img["src"]
+        except:
+            img = None
+
         novosti.append(
             RitehNovost(
-                novost.a.text.replace("\xa0", " "),  # Title
-                "http://www.riteh.uniri.hr" + novost.a["href"],  # Link
-                novost.div.text.replace("\xa0", " "),  # Summary
-                novost.dl.dd.text.replace("\xa0", " "),  # Date
+                title,
+                link,
+                summary,
+                date,
+                img,
             )
         )
     return novosti[::-1]
