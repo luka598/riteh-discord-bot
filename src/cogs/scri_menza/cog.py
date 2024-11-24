@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands, tasks
-from scri import get_meni
+from cogs.scri_menza.web import get_meni
 from itertools import count
 from datetime import datetime, timezone, timedelta
 import time
@@ -60,9 +60,7 @@ class Menza(commands.Cog):
     @staticmethod
     def _gen_menza(menza_name: str, one_off: bool) -> discord.Embed:
         tab1, tab2 = get_meni(menza_name)
-        datetime_gmt_2 = datetime.now(timezone.utc).astimezone(
-            timezone(timedelta(hours=2))
-        )
+        datetime_gmt_2 = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=2)))
         embed = discord.Embed(
             title="Menza",
             description=f"ID: *`{menza_name}`* | Ažurirano: `{datetime_gmt_2.strftime('%Y-%m-%d %H:%M:%S')}`",

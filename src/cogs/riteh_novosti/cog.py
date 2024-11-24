@@ -1,4 +1,4 @@
-from riteh import RitehNovost, get_novosti
+from cogs.riteh_novosti.web import RitehNovost, get_novosti
 import discord
 from discord.ext import commands, tasks
 
