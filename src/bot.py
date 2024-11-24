@@ -1,11 +1,11 @@
-import discord
-from discord.ext import commands
 import os
 
-from cogs.scri_menza.cog import Menza, MenzaDatabase
+import discord
 from cogs.riteh_novosti.cog import Novosti, NovostiDatabase
-from cogs.scri_student_servis.cog import SSObjave, ObjaveDatabase
+from cogs.scri_menza.cog import Menza, MenzaDatabase
+from cogs.scri_student_servis.cog import ObjaveDatabase, SSObjave
 from db import Database
+from discord.ext import commands
 
 intents = discord.Intents.default()
 intents.message_content = True

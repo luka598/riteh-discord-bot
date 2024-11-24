@@ -1,5 +1,5 @@
-from cogs.riteh_novosti.web import RitehNovost, get_novosti
 import discord
+from cogs.riteh_novosti.web import RitehNovost, get_novosti
 from discord.ext import commands, tasks
 
 ERROR_COLOR = 0xEA2915

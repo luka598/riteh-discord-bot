@@ -1,9 +1,10 @@
-import discord
-from discord.ext import commands, tasks
-from cogs.scri_menza.web import get_meni
-from itertools import count
-from datetime import datetime, timezone, timedelta
 import time
+from datetime import datetime, timedelta, timezone
+from itertools import count
+
+import discord
+from cogs.scri_menza.web import get_meni
+from discord.ext import commands, tasks
 
 ERROR_COLOR = 0xEA2915
 SUCCESS_COLOR = 0x6BEA15

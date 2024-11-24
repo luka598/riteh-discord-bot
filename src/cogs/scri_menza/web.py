@@ -1,7 +1,8 @@
+import typing as T
+
+import cachetools.func
 import requests
 from bs4 import BeautifulSoup, Tag
-import typing as T
-import cachetools.func
 from fuzzywuzzy import process
 
 MENZA_NAME_ID = {
@@ -128,9 +129,7 @@ def get_meni(menza_name: str):
         meni = []
         for row in table_data:
             meni_name = row[0].text
-            meni_content_text = [
-                p.text for p in BeautifulSoup(row[1].text, "html.parser").find_all("p")
-            ]
+            meni_content_text = [p.text for p in BeautifulSoup(row[1].text, "html.parser").find_all("p")]
 
             meni_content = []
             for item in meni_content_text:

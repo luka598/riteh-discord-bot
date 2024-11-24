@@ -1,9 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
-import cachetools.func
 import dataclasses as dc
 import typing as T
 from hashlib import sha256
+
+import cachetools.func
+import requests
+from bs4 import BeautifulSoup
 
 
 @dc.dataclass

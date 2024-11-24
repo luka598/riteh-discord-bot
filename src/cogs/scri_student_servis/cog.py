@@ -1,5 +1,5 @@
-from cogs.scri_student_servis.web import Objava, get_jobs
 import discord
+from cogs.scri_student_servis.web import Objava, get_jobs
 from discord.ext import commands, tasks
 
 ERROR_COLOR = 0xEA2915

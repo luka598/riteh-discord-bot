@@ -1,9 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
-import cachetools.func
 import dataclasses as dc
 import typing as T
 from hashlib import sha256
+
+import cachetools.func
+import requests
+from bs4 import BeautifulSoup
 
 DEFAULT_IMG = "https://www.scri.uniri.hr/components/com_jsjobs/images/blank_logo.png"
 
@@ -61,9 +62,7 @@ def get_jobs() -> T.List[Objava]:
         naziv = job.find("a", {"class": "jobtitle"}).text
 
         # link
-        link = (
-            "https://www.scri.uniri.hr" + job.find("a", {"class": "jobtitle"})["href"]
-        )
+        link = "https://www.scri.uniri.hr" + job.find("a", {"class": "jobtitle"})["href"]
 
         # ostalo
         ostalo = job.find_all("div", {"class": "js-fields"})
@@ -113,14 +112,10 @@ def get_jobs() -> T.List[Objava]:
         poslodavac = ostalo[9].text.lstrip("Poslodavac: ").lower().capitalize()
 
         # cijena_sat
-        cijena_sat = (
-            ostalo[10].text.lstrip("Cijena redovnog sata u €:: ").lower().capitalize()
-        )
+        cijena_sat = ostalo[10].text.lstrip("Cijena redovnog sata u €:: ").lower().capitalize()
 
         # cijena_sat_ned
-        cijena_sat_ned = (
-            ostalo[11].text.lstrip("Rad nedjeljom u €:: ").lower().capitalize()
-        )
+        cijena_sat_ned = ostalo[11].text.lstrip("Rad nedjeljom u €:: ").lower().capitalize()
 
         objave.append(
             Objava(
