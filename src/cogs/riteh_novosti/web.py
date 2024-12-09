@@ -49,6 +49,8 @@ def get_novosti() -> T.List[RitehNovost]:
 
         try:
             img = post.find("img")["src"]
+            if img == "https://riteh.uniri.hr/wp-content/uploads/2024/06/elementor-placeholder-image.png":
+                img = None
         except:
             img = None
 
