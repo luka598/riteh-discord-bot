@@ -37,7 +37,7 @@ class NovostiDatabase:
 
     def add_novost(self, novost: RitehNovost):
         self.db.cur.execute(
-            "INSERT INTO riteh_novost (hash, link, summary, date) VALUES (?, ?, ?, ?)",
+            "INSERT INTO riteh_novost (hash) VALUES (?)",
             (novost.hash,),
         )
         self.db.conn.commit()
