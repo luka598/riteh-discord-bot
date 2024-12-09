@@ -12,7 +12,7 @@ class RitehNovost:
     title: str
     link: str
     summary: str
-    date: str
+    category: str
     img: T.Optional[str]
 
     @property
@@ -25,36 +25,37 @@ class RitehNovost:
 
 @cachetools.func.ttl_cache(ttl=60)
 def get_novosti() -> T.List[RitehNovost]:
-    r = requests.get("http://www.riteh.uniri.hr/")
+    novosti = []
+
+    r = requests.get("https://riteh.uniri.hr/novosti/")
     soup = BeautifulSoup(r.text, "html.parser")
 
-    novosti_ul = soup.findAll("ul")[2].findAll("li")
+    posts = soup.find("div", attrs={"class": "elementor-loop-container elementor-grid"}).find_all(
+        "div", attrs={"class": "post"}
+    )
+    for post in posts:
+        for idx, x in enumerate(post.find_all("div", recursive=False)):
+            print("---", idx, x, "\n\n")
 
-    novosti = []
-    for novost in novosti_ul:
-        title = novost.h3.text.replace("\xa0", " ")
+        title = post.find("div", attrs={"class": "elementor-widget-theme-post-title"}).text.replace("\n", "")
+        title = title.replace("\n", "").replace("\xa0", " ")
+
+        summary = post.find("div", attrs={"class": "elementor-widget-theme-post-excerpt"}).text
+        summary = summary.replace("\n", "").replace("\t", "")
+
+        category = post.find("p").text.replace("\n", "")
+
+        link = post.find("a")["href"].replace("\n", "")
+
         try:
-            link = "http://www.riteh.uniri.hr" + novost.a["href"]
-        except:
-            link = ""
-        summary = novost.div.text.replace("\xa0", " ")
-        date = novost.dl.dd.text.replace("\xa0", " ")
-        try:
-            img = "http://www.riteh.uniri.hr" + novost.img["src"]
+            img = post.find("img")["src"]
         except:
             img = None
 
-        novosti.append(
-            RitehNovost(
-                title,
-                link,
-                summary,
-                date,
-                img,
-            )
-        )
-    return novosti[::-1]
+        novosti.append(RitehNovost(title, link, summary, category, img))
+
+    return novosti
 
 
 if __name__ == "__main__":
-    get_novosti()
+    print(get_novosti())

@@ -15,7 +15,7 @@ class NovostiDatabase:
         self.db.cur.execute(
             """\
             CREATE TABLE IF NOT EXISTS riteh_novost
-            (id INTEGER PRIMARY KEY, hash TEXT, link TEXT, summary TEXT, date TEXT)
+            (id INTEGER PRIMARY KEY, hash TEXT)
             """
         )
         self.db.cur.execute(
@@ -38,7 +38,7 @@ class NovostiDatabase:
     def add_novost(self, novost: RitehNovost):
         self.db.cur.execute(
             "INSERT INTO riteh_novost (hash, link, summary, date) VALUES (?, ?, ?, ?)",
-            (novost.hash, novost.link, novost.summary, novost.date),
+            (novost.hash,),
         )
         self.db.conn.commit()
 
@@ -84,7 +84,7 @@ class Novosti(commands.Cog):
         embed = discord.Embed(
             title=novost.title,
             url=novost.link,
-            description=f"Objavljeno: {novost.date}",
+            description=f"*{novost.category}*",
             color=ONEOFF_COLOR if one_off else REPEATING_COLOR,
         )
         if novost.img is not None:
