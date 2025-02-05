@@ -48,8 +48,8 @@ def get_novosti() -> T.List[RitehNovost]:
         link = post.find("a")["href"].replace("\n", "")
 
         try:
-            img = post.find("img")["src"]
-            if img == "https://riteh.uniri.hr/wp-content/uploads/2024/06/elementor-placeholder-image.png":
+            img = str(post.find("img")["src"])
+            if "elementor-placeholder" in img:
                 img = None
         except:
             img = None
