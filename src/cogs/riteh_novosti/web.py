@@ -54,7 +54,7 @@ def get_novosti() -> T.List[RitehNovost]:
 
         novosti.append(RitehNovost(title, link, summary, category, img))
 
-    return novosti[1:][::-1]
+    return novosti[::-1]
 
 
 if __name__ == "__main__":
