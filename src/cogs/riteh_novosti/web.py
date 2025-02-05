@@ -30,9 +30,7 @@ def get_novosti() -> T.List[RitehNovost]:
     r = requests.get("https://riteh.uniri.hr/novosti/")
     soup = BeautifulSoup(r.text, "html.parser")
 
-    posts = soup.find("div", attrs={"class": "elementor-loop-container elementor-grid"}).find_all(
-        "div", attrs={"class": "post"}
-    )
+    posts = soup.find("div", attrs={"class": "elementor-loop-container elementor-grid"}).find_all("div", attrs={"class": "post"}) # type: ignore
     for post in posts:
         for idx, x in enumerate(post.find_all("div", recursive=False)):
             print("---", idx, x, "\n\n")
@@ -49,7 +47,7 @@ def get_novosti() -> T.List[RitehNovost]:
 
         try:
             img = str(post.find("img")["src"])
-            if "elementor-placeholder" in img:
+            if ("elementor-placeholder" in img) or ("uniri-logo-header" in img) or ("UNIRI_Logotip" in img):
                 img = None
         except:
             img = None
