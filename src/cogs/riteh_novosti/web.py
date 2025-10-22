@@ -24,7 +24,7 @@ class RitehNovost:
 
 
 @cachetools.func.ttl_cache(ttl=60)
-def get_novosti() -> T.List[RitehNovost]:
+def _get_novosti() -> T.List[RitehNovost]:
     novosti = []
 
     r = requests.get("https://riteh.uniri.hr/novosti/")
@@ -55,6 +55,13 @@ def get_novosti() -> T.List[RitehNovost]:
         novosti.append(RitehNovost(title, link, summary, category, img))
 
     return novosti[::-1]
+
+def get_novosti() -> T.List[RitehNovost]:
+    try:
+        return self._get_novosti()
+    except Exception as e:
+        print(f"Exception: {e.__dict__.__name__}: {str(e)}")
+        return []
 
 
 if __name__ == "__main__":
