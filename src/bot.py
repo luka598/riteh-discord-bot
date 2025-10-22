@@ -26,10 +26,6 @@ async def on_ready():
     await bot.add_cog(novosti_cog)
     novosti_cog.start()
 
-    ssobjave_cog = SSObjave(bot, ObjaveDatabase(db))
-    await bot.add_cog(ssobjave_cog)
-    ssobjave_cog.start()
-
     await bot.tree.sync()
     await bot.change_presence(activity=discord.Game(name="!menza riteh"))
 
