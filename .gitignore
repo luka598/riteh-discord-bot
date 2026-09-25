@@ -1,4 +1,5 @@
-poetry.lock
-__pycache__
-.vscode
+/target
+
+.env
+
 *.db
