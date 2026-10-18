@@ -1,4 +1,4 @@
-use serenity::all::{CreateEmbed, CreateMessage};
+use serenity::all::{ActivityData, CreateEmbed, CreateMessage};
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
@@ -57,6 +57,7 @@ async fn send_response(http: &serenity::http::Http, resp: Response, message_ref:
 impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: serenity::all::Ready) {
         println!("{} is connected", ready.user.name);
+        ctx.set_presence(Some(ActivityData::playing("!menza")), serenity::all::OnlineStatus::Online);
 
         let http = ctx.http.clone();
         tokio::spawn(async move {
