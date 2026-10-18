@@ -270,16 +270,20 @@ async fn novosti_unsub(r: Request) -> Vec<Response> {
 }
 
 async fn dbg_refresh_novosti(r: Request) -> Vec<Response> {
-    let (user_id, channel_id) = match r {
-        Request::Message { user_id, channel_id, .. } => (user_id, channel_id),
+    let user_id = match r {
+        Request::Message { user_id, .. } => user_id,
         _ => return vec![],
     };
     if user_id != ADMIN_ID {
         return vec![];
     }
     let mut out = refresh(Request::None).await;
+    let subs = get_subs().await;
     if let Some(last) = fetch_novosti().await.last() {
-        out.push(Response::SendEmbed { channel_id, embed: novost_embed(last, true) });
+        let embed = novost_embed(last, true);
+        for &ch in &subs {
+            out.push(Response::SendEmbed { channel_id: ch, embed: embed.clone() });
+        }
     }
     out
 }
