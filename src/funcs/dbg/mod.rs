@@ -16,5 +16,6 @@ async fn dbg_stop(r: Request) -> Vec<Response> {
     if user_id != ADMIN_ID {
         return vec![];
     }
-    panic!("dbg_stop by admin {user_id}");
+    println!("dbg_stop by admin {user_id}");
+    std::process::exit(1);
 }
