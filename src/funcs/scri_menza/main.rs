@@ -260,7 +260,20 @@ async fn menza(r: Request) -> Response {
         }
     };
 
-    let id = *menza_ids().get(menza_name.as_str()).expect("unknown menza");
+    let id = match menza_ids().get(menza_name.as_str()) {
+        Some(&id) => id,
+        None => {
+            return Response::ReplyEmbed {
+                title: "Menza".into(),
+                description: format!(
+                    "Nepoznata menza `{menza_name}`. Dostupne: {}",
+                    menza_ids().keys().map(|k| format!("`{k}`")).collect::<Vec<_>>().join(", ")
+                ),
+                color: 0xEA2915,
+                lines: vec![],
+            };
+        }
+    };
 
     let (rucak, vecera) = fetch(id).await;
 
