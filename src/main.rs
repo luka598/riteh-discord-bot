@@ -11,6 +11,7 @@ async fn main() {
     funcs::ping::init().await;
     funcs::scri_menza::init().await;
     funcs::riteh_novosti::init().await;
+    funcs::dbg::init().await;
 
     discord::run(discord_bot_token).await;
 }
