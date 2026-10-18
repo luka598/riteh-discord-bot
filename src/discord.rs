@@ -3,16 +3,74 @@ use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
-use crate::funcs::router;
+use crate::funcs::router::{self, EmbedData, Response};
 
 struct Handler;
+
+fn build_embed(d: &EmbedData) -> CreateEmbed {
+    let mut embed = CreateEmbed::new().title(&d.title).description(&d.description).colour(d.color);
+    if let Some(u) = &d.url {
+        embed = embed.url(u);
+    }
+    if let Some(img) = &d.image {
+        embed = embed.image(img);
+    }
+    for (line, inline) in &d.lines {
+        embed = embed.field("", line, *inline);
+    }
+    embed
+}
+
+async fn send_response(http: &serenity::http::Http, resp: Response, message_ref: Option<&Message>) {
+    match resp {
+        Response::None => {}
+        Response::Reply { text } => {
+            let m = message_ref.expect("Reply requires message context");
+            let builder = CreateMessage::new().content(text).reference_message(m);
+            if let Err(why) = m.channel_id.send_message(http, builder).await {
+                println!("Error sending message: {why:?}");
+            }
+        }
+        Response::ReplyEmbed(d) => {
+            let m = message_ref.expect("Reply requires message context");
+            let builder = CreateMessage::new().embed(build_embed(&d)).reference_message(m);
+            if let Err(why) = m.channel_id.send_message(http, builder).await {
+                println!("Error sending message: {why:?}");
+            }
+        }
+        Response::Send { channel_id, text } => {
+            let builder = CreateMessage::new().content(text);
+            if let Err(why) = serenity::all::ChannelId::new(channel_id).send_message(http, builder).await {
+                println!("Error sending message: {why:?}");
+            }
+        }
+        Response::SendEmbed { channel_id, embed } => {
+            let builder = CreateMessage::new().embed(build_embed(&embed));
+            if let Err(why) = serenity::all::ChannelId::new(channel_id).send_message(http, builder).await {
+                println!("Error sending message: {why:?}");
+            }
+        }
+    }
+}
 
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: serenity::all::Ready) {
         println!("{} is connected", ready.user.name);
 
-
+        let http = ctx.http.clone();
+        tokio::spawn(async move {
+            loop {
+                let outs = {
+                    let r = router::router().read().await;
+                    r.run_periodic().await
+                };
+                for resp in outs {
+                    send_response(&http, resp, None).await;
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+            }
+        });
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
@@ -27,7 +85,7 @@ impl EventHandler for Handler {
                 .to_string();
 
             let r = router::router().read().await;
-            let resp = r
+            let resps = r
                 .run_command(
                     &command,
                     router::Request::Message {
@@ -39,26 +97,8 @@ impl EventHandler for Handler {
                 )
                 .await;
 
-            match resp {
-                router::Response::None => {}
-                router::Response::Reply { text } => {
-                    let builder = CreateMessage::new().content(text).reference_message(&msg);
-                    if let Err(why) = msg.channel_id.send_message(&ctx.http, builder).await {
-                        println!("Error sending message: {why:?}");
-                    }
-                }
-                router::Response::ReplyEmbed { title, description, color, lines } => {
-                    let mut embed = CreateEmbed::new().title(title).description(description).colour(color);
-
-                    for (line, inline) in lines {
-                        embed = embed.field("", line, inline);
-                    }
-
-                    let builder = CreateMessage::new().embed(embed).reference_message(&msg);
-                    if let Err(why) = msg.channel_id.send_message(&ctx.http, builder).await {
-                        println!("Error sending message: {why:?}");
-                    }
-                }
+            for resp in resps {
+                send_response(&ctx.http, resp, Some(&msg)).await;
             }
         }
     }

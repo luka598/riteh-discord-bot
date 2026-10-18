@@ -1,9 +1,9 @@
 use crate::{funcs::router::{self, Request, Response}, route_handler};
 
-pub async fn ping(r: Request) -> Response {
+pub async fn ping(r: Request) -> Vec<Response> {
     println!("{r:?}");
 
-    Response::Reply { text: "pong".to_string() }
+    vec![Response::Reply { text: "pong".to_string() }]
 }
 
 pub async fn init() {

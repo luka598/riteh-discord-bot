@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::{
-    funcs::router::{self, Request, Response},
+    funcs::router::{self, EmbedData, Request, Response},
     route_handler, store, util,
 };
 
@@ -240,15 +240,15 @@ pub async fn init() {
     r.register_command("menza", route_handler!(menza));
 }
 
-async fn menza(r: Request) -> Response {
+async fn menza(r: Request) -> Vec<Response> {
     let text = match r {
         Request::Message { text, .. } => text,
-        _ => return Response::None,
+        _ => return vec![],
     };
     let menza_name = match text.split_whitespace().nth(1) {
         Some(x) => x.to_lowercase(),
         None => {
-            return Response::ReplyEmbed {
+            return vec![Response::ReplyEmbed(EmbedData {
                 title: "Menza".into(),
                 description: format!(
                     "Koji menza? npr. `!menza riteh`\n\nDostupne: {}",
@@ -256,14 +256,16 @@ async fn menza(r: Request) -> Response {
                 ),
                 color: 0xEA2915,
                 lines: vec![],
-            };
+                url: None,
+                image: None,
+            })];
         }
     };
 
     let id = match menza_ids().get(menza_name.as_str()) {
         Some(&id) => id,
         None => {
-            return Response::ReplyEmbed {
+            return vec![Response::ReplyEmbed(EmbedData {
                 title: "Menza".into(),
                 description: format!(
                     "Nepoznata menza `{menza_name}`. Dostupne: {}",
@@ -271,7 +273,9 @@ async fn menza(r: Request) -> Response {
                 ),
                 color: 0xEA2915,
                 lines: vec![],
-            };
+                url: None,
+                image: None,
+            })];
         }
     };
 
@@ -291,10 +295,12 @@ async fn menza(r: Request) -> Response {
         }
     }
 
-    Response::ReplyEmbed {
+    vec![Response::ReplyEmbed(EmbedData {
         title: "Menza".into(),
         description: format!("ID: *`{menza_name}`*"),
         color: 0x15D6EA,
         lines,
-    }
+        url: None,
+        image: None,
+    })]
 }
